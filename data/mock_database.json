@@ -1,0 +1,556 @@
+{
+  "meals": [
+    {
+      "tarih": "2026-03-09",
+      "kahvalti": [
+        "Yagli balli ekmek dilimleri",
+        "Peynir",
+        "Zeytin",
+        "Maydanoz",
+        "Sut"
+      ],
+      "ogle": [
+        "Alaca corbasi",
+        "Kofteli patates oturtma",
+        "Mevsim salata"
+      ],
+      "ikindi": [
+        "Mercimekli kofte"
+      ],
+      "ara_ogun": [
+        "Meyve"
+      ],
+      "aciklama": "Alerjisi olan ogrenciler icin alternatif menu hazirdir."
+    },
+    {
+      "tarih": "2026-03-10",
+      "kahvalti": [
+        "Menemen",
+        "Beyaz peynir",
+        "Domates",
+        "Salatalik",
+        "Sut"
+      ],
+      "ogle": [
+        "Sehriye corbasi",
+        "Firinda tavuk but",
+        "Bulgur pilavi",
+        "Cacik"
+      ],
+      "ikindi": [
+        "Pogaca"
+      ],
+      "ara_ogun": [
+        "Muz"
+      ],
+      "aciklama": null
+    },
+    {
+      "tarih": "2026-03-11",
+      "kahvalti": [
+        "Kasar peynirli tost",
+        "Domates",
+        "Salatalik",
+        "Sut"
+      ],
+      "ogle": [
+        "Mercimek corbasi",
+        "Etli nohut",
+        "Pirinc pilavi",
+        "Ayran"
+      ],
+      "ikindi": [
+        "Cevizli kek"
+      ],
+      "ara_ogun": [
+        "Portakal"
+      ],
+      "aciklama": null
+    },
+    {
+      "tarih": "2026-03-12",
+      "kahvalti": [
+        "Omlet",
+        "Bal",
+        "Kaymak",
+        "Ekmek",
+        "Sut"
+      ],
+      "ogle": [
+        "Domates corbasi",
+        "Izgara kofte",
+        "Makarna",
+        "Yogurt"
+      ],
+      "ikindi": [
+        "Kurabiye"
+      ],
+      "ara_ogun": [
+        "Elma"
+      ],
+      "aciklama": null
+    },
+    {
+      "tarih": "2026-03-13",
+      "kahvalti": [
+        "Sucuklu yumurta",
+        "Peynir",
+        "Zeytin",
+        "Domates",
+        "Sut"
+      ],
+      "ogle": [
+        "Tavuk suyu corbasi",
+        "Sebzeli guvec",
+        "Pirinc pilavi",
+        "Salata"
+      ],
+      "ikindi": [
+        "Acma"
+      ],
+      "ara_ogun": [
+        "Armut"
+      ],
+      "aciklama": "Hafta sonu icin evde su tuketimi hatirlatmasi yapildi."
+    }
+  ],
+  "reports": [
+    {
+      "duygu_durumu": "Mutlu",
+      "uyku": "Iyi",
+      "etkinliklere_katilim": "Katildi",
+      "ikindi_aciklama": "Meyvesini severek yedi.",
+      "ogle_yemegi": "Iyi",
+      "arkadaslari_ile_iletisim": "Basarili",
+      "kahvalti_aciklama": "Kahvaltisini duzenli yapti.",
+      "kahvalti": "Iyi",
+      "tarih": "2026-03-09",
+      "ikindi": "Iyi",
+      "genel_uyum": "Uyumlu",
+      "ogrenci_adi": "e-kreş öğrenci deneme"
+    }
+  ],
+  "finance": {
+    "donem": "2025-2026",
+    "ogrenci_adi": "ahmet",
+    "toplam_adet": 6,
+    "odendi_adet": 1,
+    "odenmedi_adet": 5,
+    "kismi_adet": 0,
+    "toplam_tutar": 30380000.0,
+    "odenen": 380000.0,
+    "kalan": 30000000.0,
+    "odemeler": [
+      {
+        "tarih": "2025-07-08",
+        "tutar": 380000.0,
+        "tur": "Aidat",
+        "durum": "Odendi",
+        "odeme_bilgisi": "Odendi(08.07.2025)"
+      },
+      {
+        "tarih": "2025-09-01",
+        "tutar": 5000000.0,
+        "tur": "Aidat",
+        "durum": "Odenmedi",
+        "odeme_bilgisi": "Odenmedi"
+      },
+      {
+        "tarih": "2025-10-01",
+        "tutar": 5000000.0,
+        "tur": "Aidat",
+        "durum": "Odenmedi",
+        "odeme_bilgisi": "Odenmedi"
+      },
+      {
+        "tarih": "2025-11-01",
+        "tutar": 5000000.0,
+        "tur": "Aidat",
+        "durum": "Gecikmis",
+        "odeme_bilgisi": "Odenmedi - vadesi gecmis"
+      },
+      {
+        "tarih": "2025-12-01",
+        "tutar": 5000000.0,
+        "tur": "Aidat",
+        "durum": "Odenmedi",
+        "odeme_bilgisi": "Odenmedi"
+      },
+      {
+        "tarih": "2026-01-01",
+        "tutar": 10000000.0,
+        "tur": "Aidat",
+        "durum": "Odenmedi",
+        "odeme_bilgisi": "Odenmedi"
+      }
+    ]
+  },
+  "schedules": [
+    {
+      "gun": "Pazartesi",
+      "dersler": [
+        {
+          "saat": "09:00-09:30",
+          "etkinlik": "Turkce Dil Etkinligi"
+        },
+        {
+          "saat": "09:30-10:00",
+          "etkinlik": "Serbest Oyun Zamani"
+        },
+        {
+          "saat": "10:00-10:30",
+          "etkinlik": "Muzik"
+        },
+        {
+          "saat": "10:30-11:00",
+          "etkinlik": "Sanat Atolyesi"
+        }
+      ]
+    },
+    {
+      "gun": "Sali",
+      "dersler": [
+        {
+          "saat": "09:00-09:30",
+          "etkinlik": "Matematik / Fen"
+        },
+        {
+          "saat": "09:30-10:00",
+          "etkinlik": "Ingilizce"
+        },
+        {
+          "saat": "10:00-10:30",
+          "etkinlik": "Drama"
+        },
+        {
+          "saat": "10:30-11:00",
+          "etkinlik": "Bahce Etkinligi"
+        }
+      ]
+    },
+    {
+      "gun": "Carsamba",
+      "dersler": [
+        {
+          "saat": "09:00-09:30",
+          "etkinlik": "Okuma Yazma Hazirligi"
+        },
+        {
+          "saat": "09:30-10:00",
+          "etkinlik": "Fen Doga"
+        },
+        {
+          "saat": "10:00-10:30",
+          "etkinlik": "Muzik"
+        },
+        {
+          "saat": "10:30-11:00",
+          "etkinlik": "Sanat Etkinligi"
+        }
+      ]
+    },
+    {
+      "gun": "Persembe",
+      "dersler": [
+        {
+          "saat": "09:00-09:30",
+          "etkinlik": "Turkce Dil Etkinligi"
+        },
+        {
+          "saat": "09:30-10:00",
+          "etkinlik": "Ingilizce"
+        },
+        {
+          "saat": "10:00-10:30",
+          "etkinlik": "Drama"
+        },
+        {
+          "saat": "10:30-11:00",
+          "etkinlik": "Beden Egitimi"
+        }
+      ]
+    },
+    {
+      "gun": "Cuma",
+      "dersler": [
+        {
+          "saat": "09:00-09:30",
+          "etkinlik": "Matematik / Fen"
+        },
+        {
+          "saat": "09:30-10:00",
+          "etkinlik": "Okuma Etkinligi"
+        },
+        {
+          "saat": "10:00-10:30",
+          "etkinlik": "Film / Animasyon"
+        },
+        {
+          "saat": "10:30-11:00",
+          "etkinlik": "Hafta Sonu Hazirligi"
+        }
+      ]
+    }
+  ],
+  "daily_flow": [
+    {
+      "time": "08:30",
+      "activity": "Karsilama ve serbest oyun"
+    },
+    {
+      "time": "09:00",
+      "activity": "Kahvalti"
+    },
+    {
+      "time": "10:00",
+      "activity": "Ders ve atolyeler"
+    },
+    {
+      "time": "12:00",
+      "activity": "Ogle yemegi"
+    },
+    {
+      "time": "13:00",
+      "activity": "Dinlenme ve uyku"
+    },
+    {
+      "time": "15:00",
+      "activity": "Ikindi ve gun sonu toparlanma"
+    }
+  ],
+  "announcements": [
+    {
+      "id": "20260309151036846973",
+      "title": "tatil",
+      "content": "tatil işte",
+      "date": "2026-03-09",
+      "priority": "normal",
+      "pdf_filename": null,
+      "pdf_url": null
+    },
+    {
+      "id": "20260309133505568620",
+      "title": "Bayram ",
+      "content": "Bayram Tatili Nedeni ile ders yok ",
+      "date": "2026-03-09",
+      "priority": "yuksek",
+      "pdf_filename": null,
+      "pdf_url": null
+    },
+    {
+      "id": "sample-announcement-1",
+      "title": "Mart Ayi Bulteni",
+      "content": "Mart ayi etkinlik bulteni yayinda. Bahar etkinlikleri ve gezi takvimi guncellendi.",
+      "date": "2026-03-09",
+      "priority": "yuksek",
+      "pdf_filename": null,
+      "pdf_url": null
+    }
+  ],
+  "analytics": {
+    "labels": [
+      "Yemek",
+      "Odeme",
+      "Gun sonu",
+      "Duyuru",
+      "Program"
+    ],
+    "values": [
+      42,
+      31,
+      26,
+      19,
+      14
+    ]
+  },
+  "parents": [
+    {
+      "ad_soyad": "Meral Koç",
+      "telefon": "05051234567",
+      "veli_id": "veli-1",
+      "sifre": "1234"
+    },
+    {
+      "veli_id": "veli-20260309152331470440",
+      "ad_soyad": "Ayse Demir",
+      "telefon": "05059990000",
+      "sifre": "0000"
+    },
+    {
+      "veli_id": "veli-20260309161947779578",
+      "ad_soyad": "ahmet boz",
+      "telefon": "505123458",
+      "sifre": "0000"
+    }
+  ],
+  "students": [
+    {
+      "ogrenci_id": "ogrenci-1",
+      "veli_id": "veli-1",
+      "ad_soyad": "e-kreş öğrenci deneme"
+    },
+    {
+      "ogrenci_id": "ogrenci-20260309152331470440",
+      "ad_soyad": "Mavi Demir",
+      "veli_id": "veli-20260309152331470440"
+    },
+    {
+      "ogrenci_id": "ogrenci-20260309161947779578",
+      "ad_soyad": "boz boz",
+      "veli_id": "veli-20260309161947779578"
+    }
+  ],
+  "finance_records": {
+    "ogrenci-1": {
+      "donem": "2025-2026",
+      "ogrenci_adi": "ahmet",
+      "toplam_adet": 6,
+      "odendi_adet": 1,
+      "odenmedi_adet": 5,
+      "kismi_adet": 0,
+      "toplam_tutar": 30380000.0,
+      "odenen": 380000.0,
+      "kalan": 30000000.0,
+      "odemeler": [
+        {
+          "tarih": "2025-07-08",
+          "tutar": 380000.0,
+          "tur": "Aidat",
+          "durum": "Odendi",
+          "odeme_bilgisi": "Odendi(08.07.2025)"
+        },
+        {
+          "tarih": "2025-09-01",
+          "tutar": 5000000.0,
+          "tur": "Aidat",
+          "durum": "Odenmedi",
+          "odeme_bilgisi": "Odenmedi"
+        },
+        {
+          "tarih": "2025-10-01",
+          "tutar": 5000000.0,
+          "tur": "Aidat",
+          "durum": "Odenmedi",
+          "odeme_bilgisi": "Odenmedi"
+        },
+        {
+          "tarih": "2025-11-01",
+          "tutar": 5000000.0,
+          "tur": "Aidat",
+          "durum": "Gecikmis",
+          "odeme_bilgisi": "Odenmedi - vadesi gecmis"
+        },
+        {
+          "tarih": "2025-12-01",
+          "tutar": 5000000.0,
+          "tur": "Aidat",
+          "durum": "Odenmedi",
+          "odeme_bilgisi": "Odenmedi"
+        },
+        {
+          "tarih": "2026-01-01",
+          "tutar": 10000000.0,
+          "tur": "Aidat",
+          "durum": "Odenmedi",
+          "odeme_bilgisi": "Odenmedi"
+        }
+      ]
+    },
+    "ogrenci-20260309152331470440": {
+      "donem": "2025-2026",
+      "ogrenci_adi": "Mavi Demir",
+      "toplam_adet": 4,
+      "odendi_adet": 2,
+      "odenmedi_adet": 2,
+      "kismi_adet": 0,
+      "toplam_tutar": 1200000.0,
+      "odenen": 450000.0,
+      "kalan": 750000.0,
+      "odemeler": [
+        {
+          "tarih": "2025-09-01",
+          "tutar": 300000.0,
+          "tur": "Aidat",
+          "durum": "Odendi",
+          "odeme_bilgisi": "Odendi"
+        },
+        {
+          "tarih": "2025-10-01",
+          "tutar": 150000.0,
+          "tur": "Kitap",
+          "durum": "Odendi",
+          "odeme_bilgisi": "Odendi"
+        },
+        {
+          "tarih": "2025-11-01",
+          "tutar": 250000.0,
+          "tur": "Aidat",
+          "durum": "Odenmedi",
+          "odeme_bilgisi": "Bekliyor"
+        },
+        {
+          "tarih": "2025-12-01",
+          "tutar": 500000.0,
+          "tur": "Aidat",
+          "durum": "Odenmedi",
+          "odeme_bilgisi": "Bekliyor"
+        }
+      ]
+    },
+    "ogrenci-20260309161947779578": {
+      "donem": "2025-2026",
+      "ogrenci_adi": "boz boz",
+      "toplam_adet": 6,
+      "odendi_adet": 1,
+      "odenmedi_adet": 5,
+      "kismi_adet": 0,
+      "toplam_tutar": 30380000.0,
+      "odenen": 380000.0,
+      "kalan": 30000000.0,
+      "odemeler": [
+        {
+          "tarih": "2025-07-08",
+          "tutar": 380000.0,
+          "tur": "Aidat",
+          "durum": "Odendi",
+          "odeme_bilgisi": "Odendi(08.07.2025)"
+        },
+        {
+          "tarih": "2025-09-01",
+          "tutar": 5000000.0,
+          "tur": "Aidat",
+          "durum": "Odenmedi",
+          "odeme_bilgisi": "Odenmedi"
+        },
+        {
+          "tarih": "2025-10-01",
+          "tutar": 5000000.0,
+          "tur": "Aidat",
+          "durum": "Odenmedi",
+          "odeme_bilgisi": "Odenmedi"
+        },
+        {
+          "tarih": "2025-11-01",
+          "tutar": 5000000.0,
+          "tur": "Aidat",
+          "durum": "Gecikmis",
+          "odeme_bilgisi": "Odenmedi - vadesi gecmis"
+        },
+        {
+          "tarih": "2025-12-01",
+          "tutar": 5000000.0,
+          "tur": "Aidat",
+          "durum": "Odenmedi",
+          "odeme_bilgisi": "Odenmedi"
+        },
+        {
+          "tarih": "2026-01-01",
+          "tutar": 10000000.0,
+          "tur": "Aidat",
+          "durum": "Odenmedi",
+          "odeme_bilgisi": "Odenmedi"
+        }
+      ]
+    }
+  }
+}

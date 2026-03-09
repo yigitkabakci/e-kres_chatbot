@@ -1,0 +1,224 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>e-Kres Admin Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <style>
+    :root{--bg:#f6f0e6;--ink:#1f2937;--muted:#667085;--card:rgba(255,255,255,.88);--line:rgba(148,163,184,.28);--brand:#0f766e;--brand2:#c2410c;--danger:#b91c1c;--shadow:0 20px 50px rgba(15,23,42,.12)}
+    *{box-sizing:border-box}body{margin:0;font-family:Manrope,sans-serif;color:var(--ink);background:radial-gradient(circle at top left,rgba(245,158,11,.22),transparent 25%),radial-gradient(circle at top right,rgba(15,118,110,.18),transparent 28%),linear-gradient(180deg,#fffaf3 0%,var(--bg) 100%)}
+    .wrap{max-width:1440px;margin:0 auto;padding:32px 20px 64px}.hero,.grid,.stats,.toolbar,.fields{display:grid;gap:20px}.hero{grid-template-columns:1.2fr .8fr;margin-bottom:24px}.grid{grid-template-columns:repeat(12,1fr)}.stats{grid-template-columns:repeat(3,1fr)}.toolbar{grid-template-columns:repeat(4,1fr);align-items:end}.fields.two{grid-template-columns:repeat(2,1fr)}.fields.three{grid-template-columns:repeat(3,1fr)}
+    .card{background:var(--card);backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);padding:22px}.hero-card{padding:28px}.span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-7{grid-column:span 7}.span-6{grid-column:span 6}.span-5{grid-column:span 5}.span-4{grid-column:span 4}.stat{padding:16px;border-radius:20px;background:rgba(255,255,255,.75);border:1px solid var(--line)}.stat strong{display:block;font-size:1.45rem;margin-top:8px}
+    h1{margin:0 0 8px;font-size:clamp(2rem,4vw,3.3rem);line-height:1}h2,h3,h4{margin:0 0 8px}p{margin:0 0 16px;color:var(--muted)}.chips{display:flex;gap:12px;flex-wrap:wrap}.chip{padding:10px 14px;border-radius:999px;background:rgba(15,118,110,.1);color:var(--brand);font-size:14px;font-weight:800}
+    label{display:block;font-size:14px;font-weight:700;margin-bottom:8px}input,textarea,select,button{font:inherit;border-radius:14px}input,textarea,select{width:100%;padding:12px 14px;border:1px solid rgba(148,163,184,.45);background:#fff}textarea{min-height:110px;resize:vertical}button{border:0;cursor:pointer;padding:13px 18px;font-weight:800;background:linear-gradient(135deg,var(--brand),#115e59);color:#fff}.secondary{background:linear-gradient(135deg,var(--brand2),#ea580c)}.ghost{background:rgba(15,118,110,.08);color:var(--brand)}
+    table{width:100%;border-collapse:collapse;background:rgba(255,255,255,.72);border-radius:18px;overflow:hidden}th,td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{font-size:12px;color:var(--muted);text-transform:uppercase}td input,td select{padding:10px 12px}.list{display:grid;gap:12px}.item{padding:14px;border-radius:18px;background:rgba(255,255,255,.72);border:1px solid var(--line)}.pill{display:inline-flex;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:800;background:rgba(185,28,28,.1);color:var(--danger)}.notice{min-height:24px;margin-top:12px;font-weight:700}.ok{color:var(--brand)}.error{color:var(--danger)}
+    .mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;white-space:pre-wrap}.mini-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.subtle{font-size:13px;color:var(--muted)}
+    @media (max-width:1100px){.hero,.toolbar,.fields.two,.fields.three,.stats,.mini-grid{grid-template-columns:1fr}.span-8,.span-7,.span-6,.span-5,.span-4{grid-column:span 12}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <div class="card hero-card">
+      <h1>e-Kres Admin Studio</h1>
+      <p>Yemek listesi, finans, veli-ogrenci kayitlari, ders programi, duyurular ve observability metriklerini tek panelden yonetin.</p>
+      <div class="chips"><span class="chip">Coklu Veli Kaydi</span><span class="chip">Ogrenci Bazli Finans</span><span class="chip">Observability</span></div>
+    </div>
+    <div class="card hero-card">
+      <h3>Guvenli Baglanti</h3>
+      <label for="adminKey">X-Admin-Key</label>
+      <input id="adminKey" type="password" placeholder="Admin API key" />
+      <div style="margin-top:14px"><button id="connectBtn">Panele Baglan</button></div>
+      <div id="statusNotice" class="notice"></div>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card span-7">
+      <h3>Genel Finans Ozeti</h3>
+      <p>Tum ogrencilerin borc ve tahsilat durumunu toplu olarak izleyin.</p>
+      <div class="stats">
+        <div class="stat"><span>Toplam</span><strong id="statTotal">-</strong></div>
+        <div class="stat"><span>Odenen</span><strong id="statPaid">-</strong></div>
+        <div class="stat"><span>Kalan</span><strong id="statRemaining">-</strong></div>
+      </div>
+    </div>
+    <div class="card span-5">
+      <h3>En Cok Sorulan Niyetler</h3>
+      <p>`GET /api/v1/admin/stats` uzerinden gelen canli niyet dagilimi.</p>
+      <canvas id="analysisChart" height="220"></canvas>
+    </div>
+
+    <div class="card span-6">
+      <h3>Veli - Ogrenci Kayitlari</h3>
+      <p>Hata durumlarinda yeni veli veya ogrenci ekleyin, mevcut kaydi telefon numarasina gore guncelleyin.</p>
+      <div class="fields two">
+        <div><label for="parentName">Veli Adi Soyadi</label><input id="parentName" type="text" /></div>
+        <div><label for="parentPhone">Telefon Numarasi</label><input id="parentPhone" type="tel" /></div>
+      </div>
+      <div class="fields two" style="margin-top:14px">
+        <div><label for="studentName">Ogrenci Adi</label><input id="studentName" type="text" /></div>
+        <div><label for="familyExisting">Mevcut Kaydi Duzenle</label><select id="familyExisting"><option value="">Yeni Kayit</option></select></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:14px"><button id="saveFamilyBtn">Veli ve Ogrenciyi Kaydet</button><button id="deleteFamilyBtn" class="secondary">Kaydi Sil</button></div>
+      <div id="familyNotice" class="notice"></div>
+      <table style="margin-top:18px"><thead><tr><th>Veli</th><th>Telefon</th><th>Ogrenci</th><th>ID</th><th>Islem</th></tr></thead><tbody id="familyTableBody"></tbody></table>
+    </div>
+
+    <div class="card span-6">
+      <h3>AI Kullanim Ozeti</h3>
+      <div class="stats">
+        <div class="stat"><span>AI Cagri</span><strong id="aiCalls">-</strong></div>
+        <div class="stat"><span>Input Token</span><strong id="aiInputTokens">-</strong></div>
+        <div class="stat"><span>Output Token</span><strong id="aiOutputTokens">-</strong></div>
+      </div>
+      <div class="mini-grid" style="margin-top:14px">
+        <div class="item"><strong>Son Model</strong><div id="aiLastModel" style="margin-top:8px;color:var(--muted)">-</div></div>
+        <div class="item"><strong>Fallback Ozet</strong><div id="fallbackSummary" class="mono" style="margin-top:8px">-</div></div>
+      </div>
+    </div>
+
+    <div class="card span-12">
+      <h3>Basarisiz / Kapsam Disi Yanit Ornekleri</h3>
+      <p>StatsService tarafinda kaydedilen son ornekler.</p>
+      <table><thead><tr><th>Zaman</th><th>Intent</th><th>Kullanici Mesaji</th><th>Yanit</th><th>Neden</th></tr></thead><tbody id="failedResponsesBody"></tbody></table>
+    </div>
+
+    <div class="card span-8">
+      <h3>Yemek Listesi</h3>
+      <p>Haftalik menu tablosunu duzenleyin veya Excel yukleyin.</p>
+      <div class="toolbar">
+        <div><label for="mealExcel">Excel Yukle</label><input id="mealExcel" type="file" accept=".xlsx,.xls,.csv" /></div>
+        <div><button id="parseExcelBtn" class="secondary">Excelden Doldur</button></div>
+        <div><button id="addMealRowBtn" class="ghost">Satir Ekle</button></div>
+        <div><button id="saveMealsBtn">Yemekleri Kaydet</button></div>
+      </div>
+      <table><thead><tr><th>Tarih</th><th>Kahvalti</th><th>Ogle</th><th>Ikindi</th><th>Ara Ogun</th><th>Aciklama</th></tr></thead><tbody id="mealTableBody"></tbody></table>
+      <div id="mealNotice" class="notice"></div>
+    </div>
+
+    <div class="card span-4">
+      <h3>Gecikmis Odemeler</h3>
+      <p>Hangi ogrencide gecikme oldugunu birlikte gorun.</p>
+      <div id="overdueList" class="list"></div>
+    </div>
+
+    <div class="card span-7">
+      <h3>Ogrenci Bazli Odeme Takibi</h3>
+      <p>Bir ogrencinin borcunu guncellediginizde diger ogrencilerin kayitlari aynen korunur.</p>
+      <div class="fields two">
+        <div>
+          <label for="financeStudentSelect">Ogrenci Secin</label>
+          <select id="financeStudentSelect"></select>
+        </div>
+        <div class="subtle" id="financeParentInfo" style="align-self:end"></div>
+      </div>
+      <div class="fields three" style="margin-top:14px">
+        <div><label for="financePeriod">Donem</label><input id="financePeriod" type="text" /></div>
+        <div><label for="financeStudent">Ogrenci</label><input id="financeStudent" type="text" readonly /></div>
+        <div><label for="financeTotalCount">Toplam Kalem</label><input id="financeTotalCount" type="number" min="0" /></div>
+      </div>
+      <div class="fields three" style="margin-top:14px">
+        <div><label for="financeTotal">Toplam Tutar</label><input id="financeTotal" type="number" min="0" step="0.01" /></div>
+        <div><label for="financePaid">Odenen</label><input id="financePaid" type="number" min="0" step="0.01" /></div>
+        <div><label for="financeRemaining">Kalan</label><input id="financeRemaining" type="number" min="0" step="0.01" /></div>
+      </div>
+      <div class="fields three" style="margin-top:14px">
+        <div><label for="financePaidCount">Odendi Adet</label><input id="financePaidCount" type="number" min="0" /></div>
+        <div><label for="financeUnpaidCount">Odenmedi Adet</label><input id="financeUnpaidCount" type="number" min="0" /></div>
+        <div><label for="financePartialCount">Kismi Adet</label><input id="financePartialCount" type="number" min="0" /></div>
+      </div>
+      <h4 style="margin-top:18px">Odeme Kalemleri</h4>
+      <table><thead><tr><th>Tarih</th><th>Tutar</th><th>Tur</th><th>Durum</th><th>Detay</th><th>Islem</th></tr></thead><tbody id="paymentTableBody"></tbody></table>
+      <div style="display:flex;gap:10px;margin-top:14px"><button id="addPaymentRowBtn" class="ghost">Odeme Kalemi Ekle</button><button id="saveFinanceBtn">Finansi Kaydet</button><button id="deleteFinanceBtn" class="secondary">Finans Kaydini Sil</button></div>
+      <div id="financeNotice" class="notice"></div>
+    </div>
+
+    <div class="card span-5">
+      <h3>Duyuru ve PDF Bulten</h3>
+      <p>Yeni duyuru yayinlayin, isterseniz PDF bulten de ekleyin.</p>
+      <div class="fields two">
+        <div><label for="announcementTitle">Baslik</label><input id="announcementTitle" type="text" /></div>
+        <div><label for="announcementPriority">Oncelik</label><select id="announcementPriority"><option value="normal">Normal</option><option value="yuksek">Yuksek</option></select></div>
+      </div>
+      <div style="margin-top:14px"><label for="announcementContent">Icerik</label><textarea id="announcementContent"></textarea></div>
+      <div style="margin-top:14px"><label for="announcementPdf">PDF Bulten</label><input id="announcementPdf" type="file" accept=".pdf" /></div>
+      <div style="display:flex;gap:10px;margin-top:14px"><button id="saveAnnouncementBtn" class="secondary">Duyuruyu Yayinla</button></div>
+      <div id="announcementNotice" class="notice"></div>
+      <div id="announcementList" class="list" style="margin-top:18px"></div>
+    </div>
+
+    <div class="card span-12">
+      <h3>Gunluk Akis ve Ders Programi</h3>
+      <div class="grid" style="gap:20px">
+        <div class="span-4">
+          <table><thead><tr><th>Saat</th><th>Akis</th></tr></thead><tbody id="flowTableBody"></tbody></table>
+          <div style="display:flex;gap:10px;margin-top:14px"><button id="addFlowRowBtn" class="ghost">Akis Satiri Ekle</button></div>
+        </div>
+        <div class="span-8">
+          <table><thead><tr><th>Gun</th><th>Saat</th><th>Etkinlik</th></tr></thead><tbody id="scheduleTableBody"></tbody></table>
+          <div style="display:flex;gap:10px;margin-top:14px"><button id="addScheduleRowBtn" class="ghost">Ders Satiri Ekle</button><button id="saveScheduleBtn">Programi Kaydet</button></div>
+          <div id="scheduleNotice" class="notice"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+<script>
+const state={adminKey:localStorage.getItem("adminKey")||"",dashboard:null,stats:null,chart:null,selectedStudentId:""};
+const $=(s)=>document.querySelector(s);
+const fmt=(v)=>new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",maximumFractionDigits:0}).format(Number(v||0));
+const num=(v)=>new Intl.NumberFormat("tr-TR").format(Number(v||0));
+const weekdays=["Pazartesi","Sali","Carsamba","Persembe","Cuma"];
+$("#adminKey").value=state.adminKey;
+function note(id,msg,type="ok"){const n=$(id);n.textContent=msg;n.className=`notice ${type}`}
+async function adminFetch(path,options={}){if(!state.adminKey)throw new Error("Admin API key giriniz.");const res=await fetch(`/api/v1/admin${path}`,{...options,headers:{"X-Admin-Key":state.adminKey,...(options.body instanceof FormData?{}:{"Content-Type":"application/json"}),...(options.headers||{})}});if(!res.ok){const p=await res.json().catch(()=>({}));throw new Error(p.detail||"Istek basarisiz oldu.")}return res.json()}
+const inp=(v="",t="text")=>`<input type="${t}" value="${String(v??"").replaceAll('"','&quot;')}">`; const dangerBtn=(label,action)=>`<button class="secondary" data-action="${action}" type="button" style="padding:10px 12px">${label}</button>`;
+function mealsTable(rows=[]){$("#mealTableBody").innerHTML=rows.map(m=>`<tr><td>${inp(m.tarih,"date")}</td><td>${inp((m.kahvalti||[]).join(", "))}</td><td>${inp((m.ogle||[]).join(", "))}</td><td>${inp((m.ikindi||[]).join(", "))}</td><td>${inp((m.ara_ogun||[]).join(", "))}</td><td>${inp(m.aciklama||"")}</td></tr>`).join("")}
+function familyTable(items=[]){$("#familyTableBody").innerHTML=items.map(i=>`<tr data-parent-id="${i.parent_id}" data-student-id="${i.student_id}"><td>${i.parent_name}</td><td>${i.phone}</td><td>${i.student_name}</td><td class="mono">${i.parent_id}<br>${i.student_id}</td><td>${dangerBtn("Sil","delete-family")}</td></tr>`).join("")||'<tr><td colspan="5">Kayit bulunmuyor.</td></tr>';$("#familyExisting").innerHTML='<option value="">Yeni Kayit</option>'+items.map(i=>`<option value="${i.parent_id}__${i.student_id}">${i.parent_name} -> ${i.student_name}</option>`).join("")}
+function financeSelect(records=[]){const select=$("#financeStudentSelect");select.innerHTML=records.map(r=>`<option value="${r.student_id}">${r.student_name}</option>`).join("");if(!state.selectedStudentId||!records.some(r=>r.student_id===state.selectedStudentId)){state.selectedStudentId=records[0]?.student_id||""}select.value=state.selectedStudentId;renderFinanceForm()}
+function renderFinanceForm(){const record=(state.dashboard?.finance_records||[]).find(r=>r.student_id===state.selectedStudentId);const finance=record?.finance||{};$("#financeParentInfo").textContent=record?`${record.parent_name} | ${record.student_name}`:"Kayit secilmedi";$("#financePeriod").value=finance.donem||"";$("#financeStudent").value=record?.student_name||finance.ogrenci_adi||"";$("#financeTotalCount").value=finance.toplam_adet||0;$("#financePaidCount").value=finance.odendi_adet||0;$("#financeUnpaidCount").value=finance.odenmedi_adet||0;$("#financePartialCount").value=finance.kismi_adet||0;$("#financeTotal").value=finance.toplam_tutar||0;$("#financePaid").value=finance.odenen||0;$("#financeRemaining").value=finance.kalan||0;$("#paymentTableBody").innerHTML=(finance.odemeler||[]).map(i=>`<tr><td>${inp(i.tarih,"date")}</td><td>${inp(i.tutar,"number")}</td><td>${inp(i.tur)}</td><td>${inp(i.durum)}</td><td>${inp(i.odeme_bilgisi||"")}</td><td>${dangerBtn("Sil","delete-payment-row")}</td></tr>`).join("")}
+function flowTable(flow=[]){$("#flowTableBody").innerHTML=flow.map(i=>`<tr><td>${inp(i.time)}</td><td>${inp(i.activity)}</td></tr>`).join("")}
+function scheduleTable(schedules=[]){const rows=[];schedules.forEach(s=>(s.dersler||[]).forEach(d=>rows.push(`<tr><td>${inp(s.gun)}</td><td>${inp(d.saat)}</td><td>${inp(d.etkinlik)}</td></tr>`)));$("#scheduleTableBody").innerHTML=rows.join("")}
+function announcementList(items=[]){$("#announcementList").innerHTML=items.map(i=>`<div class="item"><div style="display:flex;justify-content:space-between;gap:12px"><strong>${i.title}</strong><span class="pill">${i.priority}</span></div><p style="margin-top:10px">${i.content}</p><p style="margin-top:10px;font-size:13px">${i.date}${i.pdf_url?` | <a href="${i.pdf_url}" target="_blank">PDF ac</a>`:""}</p></div>`).join("")}
+function overdueList(items=[]){$("#overdueList").innerHTML=items.length?items.map(i=>`<div class="item"><div style="display:flex;justify-content:space-between;gap:12px"><strong>${i.student_name}</strong><span class="pill">${i.durum}</span></div><div style="margin-top:8px;color:var(--muted)">${i.tarih} | ${fmt(i.tutar)}</div><div style="margin-top:8px">${i.tur}</div></div>`).join(""):'<div class="item">Gecikmis odeme bulunmuyor.</div>'}
+function financeStats(records=[]){const total=records.reduce((s,r)=>s+Number(r.finance?.toplam_tutar||0),0);const paid=records.reduce((s,r)=>s+Number(r.finance?.odenen||0),0);const remaining=records.reduce((s,r)=>s+Number(r.finance?.kalan||0),0);$("#statTotal").textContent=fmt(total);$("#statPaid").textContent=fmt(paid);$("#statRemaining").textContent=fmt(remaining)}
+function renderIntentChart(stats){const top=stats.top_intents||[];if(state.chart)state.chart.destroy();state.chart=new Chart($("#analysisChart"),{type:"bar",data:{labels:top.map(x=>x.intent),datasets:[{data:top.map(x=>x.count),borderRadius:14,backgroundColor:["#0f766e","#f59e0b","#c2410c","#1d4ed8","#16a34a","#ea580c"]}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}},x:{grid:{display:false}}}}})}
+function renderStats(stats){$("#aiCalls").textContent=num(stats.ai.calls);$("#aiInputTokens").textContent=num(stats.ai.input_tokens);$("#aiOutputTokens").textContent=num(stats.ai.output_tokens);$("#aiLastModel").textContent=stats.ai.last_model||"-";$("#fallbackSummary").textContent=Object.entries(stats.ai.fallbacks||{}).map(([k,v])=>`${k}: ${v}`).join("\n")||"-";$("#failedResponsesBody").innerHTML=(stats.failed_responses||[]).map(item=>`<tr><td>${item.timestamp}</td><td>${item.intent||"-"}</td><td>${item.user_message}</td><td>${item.response_text}</td><td>${item.reason}</td></tr>`).join("")||'<tr><td colspan="5">Kayitli ornek bulunmuyor.</td></tr>';renderIntentChart(stats)}
+function collectMeals(){return [...$("#mealTableBody").querySelectorAll("tr")].map(r=>{const c=[...r.querySelectorAll("input")];return{tarih:c[0].value,kahvalti:c[1].value.split(",").map(x=>x.trim()).filter(Boolean),ogle:c[2].value.split(",").map(x=>x.trim()).filter(Boolean),ikindi:c[3].value.split(",").map(x=>x.trim()).filter(Boolean),ara_ogun:c[4].value.split(",").map(x=>x.trim()).filter(Boolean),aciklama:c[5].value||null}}).filter(x=>x.tarih)}
+function collectPayments(){return [...$("#paymentTableBody").querySelectorAll("tr")].map(r=>{const c=[...r.querySelectorAll("input")];return{tarih:c[0].value,tutar:Number(c[1].value||0),tur:c[2].value,durum:c[3].value,odeme_bilgisi:c[4].value||null}}).filter(x=>x.tarih&&x.tur)}
+function collectFlow(){return [...$("#flowTableBody").querySelectorAll("tr")].map(r=>{const c=[...r.querySelectorAll("input")];return{time:c[0].value,activity:c[1].value}}).filter(x=>x.time&&x.activity)}
+function collectSchedules(){const grouped=new Map();[...$("#scheduleTableBody").querySelectorAll("tr")].forEach(r=>{const c=[...r.querySelectorAll("input")];const gun=c[0].value,saat=c[1].value,etkinlik=c[2].value;if(!gun||!saat||!etkinlik)return;if(!grouped.has(gun))grouped.set(gun,[]);grouped.get(gun).push({saat,etkinlik})});return [...grouped.entries()].map(([gun,dersler])=>({gun,dersler}))}
+function syncDashboard(dashboard){state.dashboard=dashboard;mealsTable(dashboard.meals||[]);familyTable(dashboard.family_directory||[]);financeSelect(dashboard.finance_records||[]);flowTable(dashboard.daily_flow||[]);scheduleTable(dashboard.schedules||[]);announcementList(dashboard.announcements||[]);overdueList(dashboard.overdue_payments||[]);financeStats(dashboard.finance_records||[])}
+async function loadDashboard(){const [dashboard,stats]=await Promise.all([adminFetch("/dashboard-data",{method:"GET"}),adminFetch("/stats",{method:"GET"})]);state.stats=stats;syncDashboard(dashboard);renderStats(stats);note("#statusNotice","Panel verileri yuklendi.","ok")}
+$("#connectBtn").addEventListener("click",async()=>{try{state.adminKey=$("#adminKey").value.trim();localStorage.setItem("adminKey",state.adminKey);await loadDashboard()}catch(e){note("#statusNotice",e.message,"error")}});
+$("#familyExisting").addEventListener("change",()=>{const selected=$("#familyExisting").value;if(!selected){$("#parentName").value="";$("#parentPhone").value="";$("#studentName").value="";return}const [parentId,studentId]=selected.split("__");const item=(state.dashboard?.family_directory||[]).find(x=>x.parent_id===parentId&&x.student_id===studentId);if(item){$("#parentName").value=item.parent_name;$("#parentPhone").value=item.phone;$("#studentName").value=item.student_name;}});
+$("#saveFamilyBtn").addEventListener("click",async()=>{try{const selected=$("#familyExisting").value;const [parentId,studentId]=selected?selected.split("__"):[null,null];const payload={parent:{veli_id:parentId,ad_soyad:$("#parentName").value,telefon:$("#parentPhone").value},student:{ogrenci_id:studentId,ad_soyad:$("#studentName").value}};const result=await adminFetch("/family-upsert",{method:"POST",body:JSON.stringify(payload)});syncDashboard(result.dashboard);note("#familyNotice","Veli ve ogrenci kaydi saklandi.","ok")}catch(e){note("#familyNotice",e.message,"error")}});
+$("#deleteFamilyBtn").addEventListener("click",async()=>{try{const selected=$("#familyExisting").value;if(!selected)throw new Error("Silmek icin mevcut bir kayit secin.");const [parentId,studentId]=selected.split("__");const result=await adminFetch("/family",{method:"DELETE",body:JSON.stringify({parent_id:parentId,student_id:studentId})});syncDashboard(result.dashboard);$("#familyExisting").value="";$("#parentName").value="";$("#parentPhone").value="";$("#studentName").value="";note("#familyNotice","Veli ve ogrenci kaydi silindi.","ok")}catch(e){note("#familyNotice",e.message,"error")}});
+$("#financeStudentSelect").addEventListener("change",e=>{state.selectedStudentId=e.target.value;renderFinanceForm()});
+$("#addMealRowBtn").addEventListener("click",()=>$("#mealTableBody").insertAdjacentHTML("beforeend",`<tr><td>${inp("","date")}</td><td>${inp("")}</td><td>${inp("")}</td><td>${inp("")}</td><td>${inp("")}</td><td>${inp("")}</td></tr>`));
+$("#parseExcelBtn").addEventListener("click",async()=>{const file=$("#mealExcel").files[0];if(!file){note("#mealNotice","Excel dosyasi seciniz.","error");return}const buffer=await file.arrayBuffer();const wb=XLSX.read(buffer,{type:"array"});const sheet=wb.Sheets[wb.SheetNames[0]];const rows=XLSX.utils.sheet_to_json(sheet);const meals=rows.map(r=>({tarih:r.tarih||r.Tarih||r.date||"",kahvalti:String(r.kahvalti||r.Kahvalti||"").split(",").map(x=>x.trim()).filter(Boolean),ogle:String(r.ogle||r.Ogle||"").split(",").map(x=>x.trim()).filter(Boolean),ikindi:String(r.ikindi||r.Ikindi||"").split(",").map(x=>x.trim()).filter(Boolean),ara_ogun:String(r.ara_ogun||r["Ara Ogun"]||"").split(",").map(x=>x.trim()).filter(Boolean),aciklama:r.aciklama||r.Aciklama||null})).filter(r=>r.tarih);mealsTable(meals);note("#mealNotice",`${meals.length} satir Excelden dolduruldu.`,"ok")});
+$("#saveMealsBtn").addEventListener("click",async()=>{try{await adminFetch("/meal-update",{method:"POST",body:JSON.stringify({meals:collectMeals()})});note("#mealNotice","Yemek listesi guncellendi.","ok");await loadDashboard()}catch(e){note("#mealNotice",e.message,"error")}});
+$("#addPaymentRowBtn").addEventListener("click",()=>$("#paymentTableBody").insertAdjacentHTML("beforeend",`<tr><td>${inp("","date")}</td><td>${inp(0,"number")}</td><td>${inp("")}</td><td>${inp("Odenmedi")}</td><td>${inp("")}</td><td>${dangerBtn("Sil","delete-payment-row")}</td></tr>`));
+$("#saveFinanceBtn").addEventListener("click",async()=>{try{const finance={donem:$("#financePeriod").value,ogrenci_adi:$("#financeStudent").value,toplam_adet:Number($("#financeTotalCount").value||0),odendi_adet:Number($("#financePaidCount").value||0),odenmedi_adet:Number($("#financeUnpaidCount").value||0),kismi_adet:Number($("#financePartialCount").value||0),toplam_tutar:Number($("#financeTotal").value||0),odenen:Number($("#financePaid").value||0),kalan:Number($("#financeRemaining").value||0),odemeler:collectPayments()};const result=await adminFetch("/finance-update",{method:"POST",body:JSON.stringify({student_id:state.selectedStudentId,finance})});syncDashboard(result.dashboard);note("#financeNotice","Secili ogrencinin finans kaydi guncellendi.","ok")}catch(e){note("#financeNotice",e.message,"error")}});
+$("#deleteFinanceBtn").addEventListener("click",async()=>{try{if(!state.selectedStudentId)throw new Error("Silmek icin ogrenci secin.");const result=await adminFetch(`/finance/${state.selectedStudentId}`,{method:"DELETE"});syncDashboard(result.dashboard);note("#financeNotice","Secili ogrencinin finans kaydi silindi.","ok")}catch(e){note("#financeNotice",e.message,"error")}});
+$("#addFlowRowBtn").addEventListener("click",()=>$("#flowTableBody").insertAdjacentHTML("beforeend",`<tr><td>${inp("")}</td><td>${inp("")}</td></tr>`));
+$("#addScheduleRowBtn").addEventListener("click",()=>$("#scheduleTableBody").insertAdjacentHTML("beforeend",`<tr><td>${inp(weekdays[0])}</td><td>${inp("09:00-09:30")}</td><td>${inp("")}</td></tr>`));
+$("#saveScheduleBtn").addEventListener("click",async()=>{try{await adminFetch("/schedule-update",{method:"POST",body:JSON.stringify({schedules:collectSchedules(),daily_flow:collectFlow()})});note("#scheduleNotice","Ders programi ve gunluk akis kaydedildi.","ok");await loadDashboard()}catch(e){note("#scheduleNotice",e.message,"error")}});
+$("#saveAnnouncementBtn").addEventListener("click",async()=>{try{const form=new FormData();form.append("title",$("#announcementTitle").value);form.append("content",$("#announcementContent").value);form.append("priority",$("#announcementPriority").value);const file=$("#announcementPdf").files[0];if(file)form.append("pdf_file",file);await adminFetch("/upload-announcement",{method:"POST",body:form});note("#announcementNotice","Duyuru yayina alindi.","ok");$("#announcementTitle").value="";$("#announcementContent").value="";$("#announcementPdf").value="";await loadDashboard()}catch(e){note("#announcementNotice",e.message,"error")}});
+["#financeTotal","#financePaid"].forEach(id=>$(id).addEventListener("input",()=>{$("#financeRemaining").value=Math.max(Number($("#financeTotal").value||0)-Number($("#financePaid").value||0),0)}));
+$("#familyTableBody").addEventListener("click",async(e)=>{const btn=e.target.closest('button[data-action="delete-family"]');if(!btn)return;try{const row=btn.closest("tr");const parentId=row.dataset.parentId;const studentId=row.dataset.studentId;const result=await adminFetch("/family",{method:"DELETE",body:JSON.stringify({parent_id:parentId,student_id:studentId})});syncDashboard(result.dashboard);note("#familyNotice","Veli ve ogrenci kaydi silindi.","ok")}catch(err){note("#familyNotice",err.message,"error")}});
+$("#paymentTableBody").addEventListener("click",(e)=>{const btn=e.target.closest('button[data-action="delete-payment-row"]');if(!btn)return;btn.closest("tr").remove()});
+if(state.adminKey){loadDashboard().catch(e=>note("#statusNotice",e.message,"error"))}
+</script>
+</body>
+</html>
+
+
+
+

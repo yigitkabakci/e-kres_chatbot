@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>e-Kreş - Veli Asistanı</title>
+    <meta name="description" content="e-Kreş anaokulu velileri için akıllı sohbet asistanı. Yemek menüsü, ödeme bilgisi, gün sonu raporu ve daha fazlası.">
+    <meta name="theme-color" content="#470101">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar__brand">
+            <span class="topbar__icon" aria-hidden="true"><i class="fa-solid fa-school"></i></span>
+            <div class="topbar__copy">
+                <span class="topbar__title">E-Kreş Veli Asistanı</span>
+                <span class="topbar__subtitle">Bordo - altın kurumsal deneyim</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="landing" id="landing">
+        <div class="landing__glow"></div>
+        <div class="landing__content">
+            <div class="landing__logo">
+                <div class="landing__logo-icon" aria-hidden="true">
+                    <span class="brand-mark"><i class="fa-solid fa-child-reaching"></i></span>
+                </div>
+                <div>
+                    <h1 class="landing__title">e-Kreş</h1>
+                    <p class="landing__subtitle">Veli Sohbet Asistanı</p>
+                </div>
+            </div>
+            <p class="landing__desc">
+                Yemek menüsünden ödeme takibine, gün sonu raporundan ders programına kadar
+                ihtiyacınız olan bilgiye hızlı ve kişisel şekilde ulaşın.
+            </p>
+            <button class="landing__cta" id="landingCta">
+                <span>Sohbete Başla</span>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M4 10h12M12 5l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="landing__features">
+            <div class="feature-card" data-msg="Bugün ne yemek var?" role="button" tabindex="0">
+                <div class="feature-card__icon"><i class="fa-solid fa-utensils"></i></div>
+                <h3>Yemek Menüsü</h3>
+                <p>Günlük kahvaltı, öğle ve ikindi menülerini öğrenin.</p>
+            </div>
+            <div class="feature-card" data-msg="Borcum ne kadar?" role="button" tabindex="0">
+                <div class="feature-card__icon"><i class="fa-solid fa-lira-sign"></i></div>
+                <h3>Ödeme Takibi</h3>
+                <p>Toplam borç, ödenen tutar ve kalan bakiyeyi görün.</p>
+            </div>
+            <div class="feature-card" data-msg="Çocuğum nasıl?" role="button" tabindex="0">
+                <div class="feature-card__icon"><i class="fa-solid fa-clipboard-check"></i></div>
+                <h3>Gün Sonu Raporu</h3>
+                <p>Uyku, duygu durumu ve genel uyum bilgisini alın.</p>
+            </div>
+            <div class="feature-card" data-msg="Bugünkü ders programı ne?" role="button" tabindex="0">
+                <div class="feature-card__icon"><i class="fa-solid fa-book-open-reader"></i></div>
+                <h3>Ders Programı</h3>
+                <p>Günün etkinlik akışını ve ders planını takip edin.</p>
+            </div>
+        </div>
+    </main>
+
+    <button class="chat-toggle" id="chatToggle" aria-label="Sohbet Aç/Kapat">
+        <span class="chat-toggle__icon chat-toggle__icon--open" id="toggleIconOpen">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                <path d="M5 21l1.5-4.5A9 9 0 1114 5a9 9 0 01-7.5 11.5L5 21z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                <circle cx="10" cy="14" r="1" fill="currentColor"></circle>
+                <circle cx="14" cy="14" r="1" fill="currentColor"></circle>
+                <circle cx="18" cy="14" r="1" fill="currentColor"></circle>
+            </svg>
+        </span>
+        <span class="chat-toggle__icon chat-toggle__icon--close" id="toggleIconClose">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                <path d="M8 8l12 12M20 8L8 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"></path>
+            </svg>
+        </span>
+        <span class="chat-toggle__badge" id="toggleBadge">1</span>
+    </button>
+
+    <div class="chat-panel" id="chatPanel">
+        <div class="login-gate" id="loginGate">
+            <div class="login-card">
+                <p class="login-card__eyebrow">Güvenli Veli Girişi</p>
+                <h2>Öğrenci bilgilerine erişin</h2>
+                <p class="login-card__desc">Telefon numaranız ile giriş yaparak ödeme ve rapor bilgilerini kişisel olarak görüntüleyin.</p>
+                <label class="login-card__field">
+                    <span>Telefon Numaranız</span>
+                    <input id="loginPhone" type="tel" placeholder="05XXXXXXXXX" autocomplete="tel">
+                </label>
+                <button class="login-card__button" id="loginStartBtn">Sohbete Başla</button>
+                <p class="login-card__hint">Demo giriş: 05051234567</p>
+                <p class="login-card__error" id="loginError"></p>
+            </div>
+        </div>
+
+        <div class="chat-panel__header">
+            <div class="chat-panel__header-info">
+                <div class="chat-panel__avatar" aria-hidden="true">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div>
+                    <h2 class="chat-panel__title">e-Kreş Asistan</h2>
+                    <span class="chat-panel__status">
+                        <span class="chat-panel__status-dot"></span>
+                        Çevrimiçi
+                    </span>
+                </div>
+            </div>
+            <button class="chat-panel__close" id="chatClose" aria-label="Sohbeti Kapat">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                </svg>
+            </button>
+        </div>
+
+        <div class="chat-panel__messages" id="chatMessages">
+            <div class="chat-msg chat-msg--bot" id="welcomeMessage">
+                <div class="chat-msg__avatar" aria-hidden="true"><i class="fa-solid fa-robot"></i></div>
+                <div class="chat-msg__content">
+                    <div class="chat-msg__bubble" id="welcomeBubble">
+                        Hoş geldiniz. Giriş yaptıktan sonra size öğrenciniz hakkında kişisel bilgiler sunabilirim.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-panel__quick" id="chatQuick">
+            <button class="quick-btn" data-msg="Bugün ne yemek var?">
+                <span class="quick-btn__icon"><i class="fa-solid fa-utensils"></i></span>
+                Bugün ne yemek var?
+            </button>
+            <button class="quick-btn" data-msg="Borcum ne kadar?">
+                <span class="quick-btn__icon"><i class="fa-solid fa-lira-sign"></i></span>
+                Borcum ne kadar?
+            </button>
+            <button class="quick-btn" data-msg="Çocuğum nasıl?">
+                <span class="quick-btn__icon"><i class="fa-solid fa-clipboard-check"></i></span>
+                Çocuğum nasıl?
+            </button>
+            <button class="quick-btn" data-msg="Bugünkü ders programı ne?">
+                <span class="quick-btn__icon"><i class="fa-solid fa-book-open-reader"></i></span>
+                Ders programı
+            </button>
+            <button class="quick-btn" data-msg="Duyuru var mı?">
+                <span class="quick-btn__icon"><i class="fa-solid fa-bullhorn"></i></span>
+                Duyurular
+            </button>
+            <button class="quick-btn" data-msg="İletişim telefon numarası nedir?">
+                <span class="quick-btn__icon"><i class="fa-solid fa-phone"></i></span>
+                İletişim
+            </button>
+        </div>
+
+        <div class="chat-panel__url-input" id="urlInputContainer" style="display: none;">
+            <input type="url" id="urlInputField" placeholder="Taranacak web adresini yapıştırın (https://...)" autocomplete="off">
+            <button id="urlSubmitBtn" class="url-submit-btn" aria-label="URL Tara">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </button>
+        </div>
+
+        <div class="chat-panel__input">
+            <input type="file" id="pdfFileInput" accept=".pdf" style="display:none;">
+            <button class="chat-attach" id="chatAttachUrl" aria-label="URL Tara" title="Web Sitesi Tara">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                </svg>
+            </button>
+            <button class="chat-attach" id="chatAttach" aria-label="PDF Yükle" title="PDF Yükle">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M17.5 9.31l-7.78 7.78a4.5 4.5 0 01-6.36-6.36l7.78-7.78a3 3 0 014.24 4.24l-7.07 7.07a1.5 1.5 0 01-2.12-2.12l6.36-6.36" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+            </button>
+            <input type="text" class="chat-input" id="chatInput" placeholder="Mesajınızı yazın..." autocomplete="off" maxlength="4096">
+            <button class="chat-send" id="chatSend" aria-label="Gönder" disabled>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M3 10l14-7-7 14-2-5-5-2z" fill="currentColor"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

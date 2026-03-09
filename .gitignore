@@ -1,0 +1,25 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Secrets
+.env
+
+# Local runtime data
+data/failed_responses.jsonl
+data/observability_stats.json
+static/uploads/
+pdf_pages/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
