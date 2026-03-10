@@ -1,4 +1,4 @@
-(function () {
+ï»¿(function () {
     "use strict";
 
     const API_URL = "/api/v1/chat";
@@ -6,6 +6,7 @@
     const CLIENT_CONFIG_URL = "/api/v1/chat/client-config";
     const UPLOAD_PDF_URL = "/api/v1/chat/upload-pdf";
     const UPLOAD_URL_API = "/api/v1/chat/upload-url";
+    const ANNOUNCEMENTS_URL = "/api/v1/chat/announcements";
     const SESSION_KEY = "ekres_session_id";
     const AUTH_KEY = "ekres_parent_auth";
     const PROFILE_KEY = "ekres_parent_profile";
@@ -54,6 +55,14 @@
         localStorage.setItem(SESSION_KEY, getSessionId());
     }
 
+    function setActiveStudent(studentId) {
+        if (!parentProfile) {
+            return;
+        }
+        parentProfile.active_student_id = studentId || null;
+        storeLoginState(parentAuth, parentProfile);
+    }
+
     async function loadClientConfig() {
         try {
             const response = await fetch(CLIENT_CONFIG_URL, { method: "GET" });
@@ -85,6 +94,14 @@
         return "Kaynak: " + source;
     }
 
+    function escapeHtml(text) {
+        return String(text || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/\"/g, "&quot;");
+    }
+
     const chatToggle = document.getElementById("chatToggle");
     const chatPanel = document.getElementById("chatPanel");
     const chatClose = document.getElementById("chatClose");
@@ -113,6 +130,23 @@
     let parentAuth = null;
     let parentProfile = null;
 
+    function resetParentSession(message) {
+        parentAuth = null;
+        parentProfile = null;
+        localStorage.removeItem(AUTH_KEY);
+        localStorage.removeItem(PROFILE_KEY);
+        localStorage.removeItem(PARENT_NAME_KEY);
+        if (message) {
+            welcomeBubble.textContent = message;
+        }
+        loginError.textContent = "";
+        loginPhone.value = "";
+        chatInput.disabled = true;
+        chatSend.disabled = true;
+        loginGate.classList.remove("is-hidden");
+        loginPhone.focus();
+    }
+
     function updateWelcomeMessage() {
         if (parentProfile && parentProfile.greeting) {
             welcomeBubble.textContent = parentProfile.greeting;
@@ -121,9 +155,9 @@
         }
 
         if (savedProfile && savedProfile.parent_name) {
-            welcomeBubble.textContent = "Hoþ geldiniz. Devam etmeden önce veliye ait telefon numarasýný yeniden doðrulayýn.";
+            welcomeBubble.textContent = "Hos geldiniz. Devam etmeden once veliye ait telefon numarasini yeniden dogrulayin.";
         } else {
-            welcomeBubble.textContent = "Hoþ geldiniz. Devam etmeden önce veliye ait telefon numarasýný girin.";
+            welcomeBubble.textContent = "Hos geldiniz. Devam etmeden once veliye ait telefon numarasini girin.";
         }
         loginGate.classList.remove("is-hidden");
     }
@@ -155,13 +189,13 @@
         const phone = (loginPhone.value || "").trim();
 
         if (!phone) {
-            loginError.textContent = "Telefon numarasý zorunludur.";
+            loginError.textContent = "Telefon numarasi zorunludur.";
             return;
         }
 
         loginError.textContent = "";
         loginStartBtn.disabled = true;
-        loginStartBtn.textContent = "Giriþ yapýlýyor...";
+        loginStartBtn.textContent = "Giris yapiliyor...";
 
         try {
             const response = await fetch(AUTH_URL, {
@@ -170,29 +204,35 @@
                     "Content-Type": "application/json",
                     "X-Auth-Flow": "parent-login",
                 }),
-                body: JSON.stringify({ phone: phone }),
+                body: JSON.stringify({ phone: phone, session_id: getSessionId() }),
             });
 
             const data = await response.json().catch(function () { return {}; });
             if (!response.ok) {
-                throw new Error(data.detail || "Giriþ baþarýsýz.");
+                throw new Error(data.detail || "Giris basarisiz.");
             }
 
             parentAuth = { phone: phone };
-            parentProfile = data;
+            parentProfile = Object.assign({}, data, { active_student_id: data.student_id || null });
             storeLoginState(parentAuth, parentProfile);
+            chatInput.disabled = false;
             updateWelcomeMessage();
             chatInput.focus();
         } catch (error) {
-            loginError.textContent = error.message || "Giriþ baþarýsýz.";
+            loginError.textContent = error.message || "Giris basarisiz.";
         } finally {
             loginStartBtn.disabled = false;
-            loginStartBtn.textContent = "Sohbete Baþla";
+            loginStartBtn.textContent = "Sohbete Basla";
         }
     }
 
     async function sendMessage(text) {
         if (isSending) {
+            return;
+        }
+
+        if (!parentAuth) {
+            resetParentSession("Lutfen once veli telefon numaraniz ile giris yapin.");
             return;
         }
 
@@ -211,6 +251,7 @@
                     message: text,
                     parent_phone: parentAuth ? parentAuth.phone : null,
                     password: null,
+                    active_student_id: parentProfile ? parentProfile.active_student_id : null,
                 }),
             });
 
@@ -221,12 +262,48 @@
 
             removeTyping(typingEl);
             appendMessage("bot", data.response, buildCitation(data.source, data.page));
+            if (data.metadata && data.metadata.active_student_id) {
+                setActiveStudent(data.metadata.active_student_id);
+            }
+            if (data.metadata && (data.metadata.requires_reauth || data.metadata.require_login)) {
+                resetParentSession(data.response);
+            }
         } catch (error) {
             removeTyping(typingEl);
-            appendMessage("bot", error.message || "Ýstek iþlenemedi.");
+            appendMessage("bot", error.message || "Istek islenemedi.");
         } finally {
             isSending = false;
-            chatSend.disabled = !chatInput.value.trim();
+            chatSend.disabled = !chatInput.value.trim() || !parentAuth;
+        }
+    }
+
+    async function showAnnouncements() {
+        if (isSending) {
+            return;
+        }
+
+        isSending = true;
+        chatSend.disabled = true;
+        appendMessage("user", "Duyurular");
+        const typingEl = showTyping();
+
+        try {
+            const response = await fetch(ANNOUNCEMENTS_URL, {
+                method: "GET",
+                headers: buildHeaders(),
+            });
+            const data = await response.json().catch(function () { return {}; });
+            if (!response.ok) {
+                throw new Error(data.detail || "Duyurular yuklenemedi.");
+            }
+            removeTyping(typingEl);
+            appendHtmlMessage("bot", renderAnnouncementsHtml(Array.isArray(data.announcements) ? data.announcements : []));
+        } catch (error) {
+            removeTyping(typingEl);
+            appendMessage("bot", error.message || "Duyurular getirilemedi.");
+        } finally {
+            isSending = false;
+            chatSend.disabled = !chatInput.value.trim() || !parentAuth;
         }
     }
 
@@ -239,14 +316,14 @@
         try {
             new URL(urlVal);
         } catch (error) {
-            appendMessage("bot", "Lütfen geçerli bir URL girin.");
+            appendMessage("bot", "Lutfen gecerli bir URL girin.");
             return;
         }
 
         urlInputContainer.style.display = "none";
         urlInputField.value = "";
         chatAttachUrl.classList.add("is-uploading");
-        appendMessage("user", "URL taranýyor: " + urlVal);
+        appendMessage("user", "URL taraniyor: " + urlVal);
         const typingEl = showTyping();
 
         try {
@@ -258,12 +335,12 @@
             const data = await response.json().catch(function () { return {}; });
             removeTyping(typingEl);
             if (!response.ok) {
-                throw new Error(data.detail || "Tarama baþarýsýz.");
+                throw new Error(data.detail || "Tarama basarisiz.");
             }
-            appendMessage("bot", data.message || "Web sayfasý baþarýyla tarandý.");
+            appendMessage("bot", data.message || "Web sayfasi basariyla tarandi.");
         } catch (error) {
             removeTyping(typingEl);
-            appendMessage("bot", "URL taranýrken hata oluþtu: " + error.message);
+            appendMessage("bot", "URL taranirken hata olustu: " + error.message);
         } finally {
             chatAttachUrl.classList.remove("is-uploading");
         }
@@ -300,6 +377,37 @@
         scrollToBottom();
     }
 
+    function appendHtmlMessage(role, html, citation) {
+        const wrapper = document.createElement("div");
+        wrapper.className = role === "user" ? "chat-msg chat-msg--user" : "chat-msg chat-msg--bot";
+
+        if (role !== "user") {
+            const avatar = document.createElement("div");
+            avatar.className = "chat-msg__avatar";
+            avatar.innerHTML = ASSISTANT_AVATAR;
+            wrapper.appendChild(avatar);
+        }
+
+        const content = document.createElement("div");
+        content.className = "chat-msg__content";
+
+        const bubble = document.createElement("div");
+        bubble.className = "chat-msg__bubble";
+        bubble.innerHTML = html;
+        content.appendChild(bubble);
+
+        if (role !== "user" && citation) {
+            const citationEl = document.createElement("div");
+            citationEl.className = "chat-msg__citation";
+            citationEl.textContent = citation;
+            content.appendChild(citationEl);
+        }
+
+        wrapper.appendChild(content);
+        chatMessages.appendChild(wrapper);
+        scrollToBottom();
+    }
+
     function formatText(text) {
         if (!text) {
             return "";
@@ -309,11 +417,29 @@
         html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
         html = html.replace(/__(.*?)__/g, "<strong>$1</strong>");
         html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
-        html = html.replace(/^[\-•]\s+(.+)/gm, "<li>$1</li>");
+        html = html.replace(/^[\-â€¢]\s+(.+)/gm, "<li>$1</li>");
         html = html.replace(/(<li>.*<\/li>)/gs, "<ul>$1</ul>");
         html = html.replace(/<\/ul>\s*<ul>/g, "");
         html = html.replace(/\n/g, "<br>");
         return html;
+    }
+
+    function renderAnnouncementsHtml(items) {
+        if (!items.length) {
+            return "<strong>Duyurular</strong><br>Yayinda aktif duyuru bulunmuyor.";
+        }
+
+        const cards = items.map(function (item) {
+            const title = escapeHtml(item.title || "Duyuru");
+            const content = escapeHtml(item.content || "");
+            const date = escapeHtml(item.date || "");
+            const link = item.pdf_url
+                ? '<a class="chat-announcement-link" href="' + encodeURI(item.pdf_url) + '" target="_blank" rel="noopener noreferrer">PDF bulteni yeni sekmede ac</a>'
+                : "";
+            return '<div class="chat-announcement-item"><strong>' + title + '</strong><span>' + content + '</span><small>' + date + '</small>' + link + '</div>';
+        }).join("");
+
+        return '<div class="chat-announcement-list"><strong>Duyurular</strong>' + cards + '</div>';
     }
 
     function showTyping() {
@@ -385,12 +511,16 @@
         }
         const msg = btn.getAttribute("data-msg");
         if (msg) {
+            if (msg === "Duyuru var mÄ±?") {
+                showAnnouncements();
+                return;
+            }
             sendMessage(msg);
         }
     });
 
     chatInput.addEventListener("input", function () {
-        chatSend.disabled = !chatInput.value.trim();
+        chatSend.disabled = !chatInput.value.trim() || !parentAuth;
     });
 
     chatInput.addEventListener("keydown", function (event) {
@@ -449,18 +579,18 @@
                 return;
             }
             if (!file.name.toLowerCase().endsWith(".pdf")) {
-                appendMessage("bot", "Sadece PDF dosyalarý kabul edilir.");
+                appendMessage("bot", "Sadece PDF dosyalari kabul edilir.");
                 pdfFileInput.value = "";
                 return;
             }
             if (file.size > 10 * 1024 * 1024) {
-                appendMessage("bot", "PDF dosyasý 10MB'dan büyük olamaz.");
+                appendMessage("bot", "PDF dosyasi 10MB'dan buyuk olamaz.");
                 pdfFileInput.value = "";
                 return;
             }
 
             chatAttach.classList.add("is-uploading");
-            appendMessage("user", "PDF yükleniyor: " + file.name);
+            appendMessage("user", "PDF yukleniyor: " + file.name);
             const typingEl = showTyping();
 
             try {
@@ -476,12 +606,12 @@
                 const data = await response.json().catch(function () { return {}; });
                 removeTyping(typingEl);
                 if (!response.ok) {
-                    throw new Error(data.detail || "Yükleme baþarýsýz.");
+                    throw new Error(data.detail || "Yukleme basarisiz.");
                 }
-                appendMessage("bot", data.message || (file.name + " baþarýyla yüklendi."));
+                appendMessage("bot", data.message || (file.name + " basariyla yuklendi."));
             } catch (error) {
                 removeTyping(typingEl);
-                appendMessage("bot", "PDF yüklenirken hata oluþtu: " + error.message);
+                appendMessage("bot", "PDF yuklenirken hata olustu: " + error.message);
             } finally {
                 chatAttach.classList.remove("is-uploading");
                 pdfFileInput.value = "";
@@ -504,6 +634,7 @@
     if (savedAuth) {
         loginPhone.value = savedAuth.phone || "";
     }
+    chatInput.disabled = true;
     localStorage.removeItem(AUTH_KEY);
     localStorage.removeItem(PROFILE_KEY);
     localStorage.removeItem(PARENT_NAME_KEY);

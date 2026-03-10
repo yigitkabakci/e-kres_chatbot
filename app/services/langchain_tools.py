@@ -10,6 +10,7 @@ from app.services.mock_database import get_database
 logger = logging.getLogger(__name__)
 
 _knowledge: KnowledgeService | None = None
+SECURITY_MESSAGE = "Uzgunum, sadece kendi ogrencilerinize ait bilgilere erisim yetkiniz bulunmaktadir. Baska bir ogrenci hakkinda bilgi almak icin lutfen o ogrenciye kayitli veli telefon numarasiyla tekrar giris yapin."
 
 
 def get_knowledge() -> KnowledgeService:
@@ -17,6 +18,18 @@ def get_knowledge() -> KnowledgeService:
     if _knowledge is None:
         _knowledge = KnowledgeService()
     return _knowledge
+
+
+def _validate_student_access(kwargs: dict[str, Any]) -> dict[str, Any] | None:
+    allowed_student_ids = set(kwargs.get("allowed_student_ids") or [])
+    active_student_id = kwargs.get("active_student_id")
+    if not allowed_student_ids or not active_student_id or active_student_id not in allowed_student_ids:
+        return {
+            "type": "security_block",
+            "message": SECURITY_MESSAGE,
+            "requires_reauth": True,
+        }
+    return None
 
 
 class MealQueryTool(BaseTool):
@@ -49,7 +62,10 @@ class ReportQueryTool(BaseTool):
         return "Ogrencinin gun sonu raporunu sorgular."
 
     async def run(self, query: str, **kwargs: Any) -> dict[str, Any]:
-        result = get_knowledge().query_report(parent_id=kwargs.get("parent_id"))
+        blocked = _validate_student_access(kwargs)
+        if blocked:
+            return blocked
+        result = get_knowledge().query_report(parent_id=kwargs.get("parent_id"), student_id=kwargs.get("active_student_id"))
         return {
             "type": result["type"],
             "data": result["data"],
@@ -69,7 +85,10 @@ class PaymentQueryTool(BaseTool):
         return "Odeme ve borc durumunu sorgular."
 
     async def run(self, query: str, **kwargs: Any) -> dict[str, Any]:
-        result = get_knowledge().query_payments(parent_id=kwargs.get("parent_id"))
+        blocked = _validate_student_access(kwargs)
+        if blocked:
+            return blocked
+        result = get_knowledge().query_payments(parent_id=kwargs.get("parent_id"), student_id=kwargs.get("active_student_id"))
         return {
             "type": result["type"],
             "data": result["data"],

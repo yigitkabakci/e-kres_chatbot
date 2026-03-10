@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
@@ -91,13 +91,14 @@
 
     <div class="card span-8">
       <h3>Yemek Listesi</h3>
-      <p>Haftalik menu tablosunu duzenleyin veya Excel yukleyin.</p>
+      <p>Haftalik menu tablosunu duzenleyin veya Excel/PDF dosyasi yukleyin. Iceri aktarma sonrasi veriler aninda JSON veritabanina ve RAG katmanina yazilir.</p>
       <div class="toolbar">
-        <div><label for="mealExcel">Excel Yukle</label><input id="mealExcel" type="file" accept=".xlsx,.xls,.csv" /></div>
-        <div><button id="parseExcelBtn" class="secondary">Excelden Doldur</button></div>
+        <div><label for="mealExcel">Excel/PDF Yukle</label><input id="mealExcel" type="file" accept=".xlsx,.xls,.csv,.pdf" /></div>
+        <div><button id="parseExcelBtn" class="secondary">Onizleme Doldur</button></div>
+        <div><button id="importMealsBtn" class="secondary">Dosyayi Iceri Aktar</button></div>
         <div><button id="addMealRowBtn" class="ghost">Satir Ekle</button></div>
-        <div><button id="saveMealsBtn">Yemekleri Kaydet</button></div>
       </div>
+      <div style="display:flex;gap:10px;margin-top:14px"><button id="saveMealsBtn">Yemekleri Kaydet</button></div>
       <table><thead><tr><th>Tarih</th><th>Kahvalti</th><th>Ogle</th><th>Ikindi</th><th>Ara Ogun</th><th>Aciklama</th></tr></thead><tbody id="mealTableBody"></tbody></table>
       <div id="mealNotice" class="notice"></div>
     </div>
@@ -155,6 +156,13 @@
 
     <div class="card span-12">
       <h3>Gunluk Akis ve Ders Programi</h3>
+      <p>Excel, CSV veya PDF dosyasindan gunluk akis ve ders programi verilerini tek tikla ice aktarabilirsiniz.</p>
+      <div class="toolbar">
+        <div><label for="scheduleImportFile">Dosya Yukle</label><input id="scheduleImportFile" type="file" accept=".xlsx,.xls,.csv,.pdf" /></div>
+        <div><button id="importScheduleBtn" class="secondary">Program Dosyasini Iceri Aktar</button></div>
+        <div></div>
+        <div></div>
+      </div>
       <div class="grid" style="gap:20px">
         <div class="span-4">
           <table><thead><tr><th>Saat</th><th>Akis</th></tr></thead><tbody id="flowTableBody"></tbody></table>
@@ -178,6 +186,7 @@ const weekdays=["Pazartesi","Sali","Carsamba","Persembe","Cuma"];
 $("#adminKey").value=state.adminKey;
 function note(id,msg,type="ok"){const n=$(id);n.textContent=msg;n.className=`notice ${type}`}
 async function adminFetch(path,options={}){if(!state.adminKey)throw new Error("Admin API key giriniz.");const res=await fetch(`/api/v1/admin${path}`,{...options,headers:{"X-Admin-Key":state.adminKey,...(options.body instanceof FormData?{}:{"Content-Type":"application/json"}),...(options.headers||{})}});if(!res.ok){const p=await res.json().catch(()=>({}));throw new Error(p.detail||"Istek basarisiz oldu.")}return res.json()}
+async function importStructuredData(section,fileSelector,noticeSelector,successText){const file=$(fileSelector).files[0];if(!file){note(noticeSelector,"Lutfen once bir dosya secin.","error");return}const form=new FormData();form.append("section",section);form.append("file",file);const result=await adminFetch("/import-structured-data",{method:"POST",body:form});syncDashboard(result.dashboard);note(noticeSelector,successText || `${result.filename} iceri aktirildi.`,"ok");$(fileSelector).value="";return result}
 const inp=(v="",t="text")=>`<input type="${t}" value="${String(v??"").replaceAll('"','&quot;')}">`; const dangerBtn=(label,action)=>`<button class="secondary" data-action="${action}" type="button" style="padding:10px 12px">${label}</button>`;
 function mealsTable(rows=[]){$("#mealTableBody").innerHTML=rows.map(m=>`<tr><td>${inp(m.tarih,"date")}</td><td>${inp((m.kahvalti||[]).join(", "))}</td><td>${inp((m.ogle||[]).join(", "))}</td><td>${inp((m.ikindi||[]).join(", "))}</td><td>${inp((m.ara_ogun||[]).join(", "))}</td><td>${inp(m.aciklama||"")}</td></tr>`).join("")}
 function familyTable(items=[]){$("#familyTableBody").innerHTML=items.map(i=>`<tr data-parent-id="${i.parent_id}" data-student-id="${i.student_id}"><td>${i.parent_name}</td><td>${i.phone}</td><td>${i.student_name}</td><td class="mono">${i.parent_id}<br>${i.student_id}</td><td>${dangerBtn("Sil","delete-family")}</td></tr>`).join("")||'<tr><td colspan="5">Kayit bulunmuyor.</td></tr>';$("#familyExisting").innerHTML='<option value="">Yeni Kayit</option>'+items.map(i=>`<option value="${i.parent_id}__${i.student_id}">${i.parent_name} -> ${i.student_name}</option>`).join("")}
@@ -202,7 +211,8 @@ $("#saveFamilyBtn").addEventListener("click",async()=>{try{const selected=$("#fa
 $("#deleteFamilyBtn").addEventListener("click",async()=>{try{const selected=$("#familyExisting").value;if(!selected)throw new Error("Silmek icin mevcut bir kayit secin.");const [parentId,studentId]=selected.split("__");const result=await adminFetch("/family",{method:"DELETE",body:JSON.stringify({parent_id:parentId,student_id:studentId})});syncDashboard(result.dashboard);$("#familyExisting").value="";$("#parentName").value="";$("#parentPhone").value="";$("#studentName").value="";note("#familyNotice","Veli ve ogrenci kaydi silindi.","ok")}catch(e){note("#familyNotice",e.message,"error")}});
 $("#financeStudentSelect").addEventListener("change",e=>{state.selectedStudentId=e.target.value;renderFinanceForm()});
 $("#addMealRowBtn").addEventListener("click",()=>$("#mealTableBody").insertAdjacentHTML("beforeend",`<tr><td>${inp("","date")}</td><td>${inp("")}</td><td>${inp("")}</td><td>${inp("")}</td><td>${inp("")}</td><td>${inp("")}</td></tr>`));
-$("#parseExcelBtn").addEventListener("click",async()=>{const file=$("#mealExcel").files[0];if(!file){note("#mealNotice","Excel dosyasi seciniz.","error");return}const buffer=await file.arrayBuffer();const wb=XLSX.read(buffer,{type:"array"});const sheet=wb.Sheets[wb.SheetNames[0]];const rows=XLSX.utils.sheet_to_json(sheet);const meals=rows.map(r=>({tarih:r.tarih||r.Tarih||r.date||"",kahvalti:String(r.kahvalti||r.Kahvalti||"").split(",").map(x=>x.trim()).filter(Boolean),ogle:String(r.ogle||r.Ogle||"").split(",").map(x=>x.trim()).filter(Boolean),ikindi:String(r.ikindi||r.Ikindi||"").split(",").map(x=>x.trim()).filter(Boolean),ara_ogun:String(r.ara_ogun||r["Ara Ogun"]||"").split(",").map(x=>x.trim()).filter(Boolean),aciklama:r.aciklama||r.Aciklama||null})).filter(r=>r.tarih);mealsTable(meals);note("#mealNotice",`${meals.length} satir Excelden dolduruldu.`,"ok")});
+$("#parseExcelBtn").addEventListener("click",async()=>{const file=$("#mealExcel").files[0];if(!file){note("#mealNotice","Excel veya CSV dosyasi seciniz.","error");return}if(file.name.toLowerCase().endsWith(".pdf")){note("#mealNotice","PDF dosyalari dogrudan sunucuya aktarilir. Onizleme icin once Iceri Aktar butonunu kullanin.","error");return}const buffer=await file.arrayBuffer();const wb=XLSX.read(buffer,{type:"array"});const sheet=wb.Sheets[wb.SheetNames[0]];const rows=XLSX.utils.sheet_to_json(sheet);const meals=rows.map(r=>({tarih:r.tarih||r.Tarih||r.date||"",kahvalti:String(r.kahvalti||r.Kahvalti||"").split(",").map(x=>x.trim()).filter(Boolean),ogle:String(r.ogle||r.Ogle||"").split(",").map(x=>x.trim()).filter(Boolean),ikindi:String(r.ikindi||r.Ikindi||"").split(",").map(x=>x.trim()).filter(Boolean),ara_ogun:String(r.ara_ogun||r["Ara Ogun"]||"").split(",").map(x=>x.trim()).filter(Boolean),aciklama:r.aciklama||r.Aciklama||null})).filter(r=>r.tarih);mealsTable(meals);note("#mealNotice",`${meals.length} satir onizleme olarak dolduruldu.`,"ok")});
+$("#importMealsBtn").addEventListener("click",async()=>{try{await importStructuredData("meals","#mealExcel","#mealNotice","Yemek listesi dosyadan ice aktarildi ve RAG tazelendi.")}catch(e){note("#mealNotice",e.message,"error")}});
 $("#saveMealsBtn").addEventListener("click",async()=>{try{await adminFetch("/meal-update",{method:"POST",body:JSON.stringify({meals:collectMeals()})});note("#mealNotice","Yemek listesi guncellendi.","ok");await loadDashboard()}catch(e){note("#mealNotice",e.message,"error")}});
 $("#addPaymentRowBtn").addEventListener("click",()=>$("#paymentTableBody").insertAdjacentHTML("beforeend",`<tr><td>${inp("","date")}</td><td>${inp(0,"number")}</td><td>${inp("")}</td><td>${inp("Odenmedi")}</td><td>${inp("")}</td><td>${dangerBtn("Sil","delete-payment-row")}</td></tr>`));
 $("#saveFinanceBtn").addEventListener("click",async()=>{try{const finance={donem:$("#financePeriod").value,ogrenci_adi:$("#financeStudent").value,toplam_adet:Number($("#financeTotalCount").value||0),odendi_adet:Number($("#financePaidCount").value||0),odenmedi_adet:Number($("#financeUnpaidCount").value||0),kismi_adet:Number($("#financePartialCount").value||0),toplam_tutar:Number($("#financeTotal").value||0),odenen:Number($("#financePaid").value||0),kalan:Number($("#financeRemaining").value||0),odemeler:collectPayments()};const result=await adminFetch("/finance-update",{method:"POST",body:JSON.stringify({student_id:state.selectedStudentId,finance})});syncDashboard(result.dashboard);note("#financeNotice","Secili ogrencinin finans kaydi guncellendi.","ok")}catch(e){note("#financeNotice",e.message,"error")}});
@@ -210,6 +220,7 @@ $("#deleteFinanceBtn").addEventListener("click",async()=>{try{if(!state.selected
 $("#addFlowRowBtn").addEventListener("click",()=>$("#flowTableBody").insertAdjacentHTML("beforeend",`<tr><td>${inp("")}</td><td>${inp("")}</td></tr>`));
 $("#addScheduleRowBtn").addEventListener("click",()=>$("#scheduleTableBody").insertAdjacentHTML("beforeend",`<tr><td>${inp(weekdays[0])}</td><td>${inp("09:00-09:30")}</td><td>${inp("")}</td></tr>`));
 $("#saveScheduleBtn").addEventListener("click",async()=>{try{await adminFetch("/schedule-update",{method:"POST",body:JSON.stringify({schedules:collectSchedules(),daily_flow:collectFlow()})});note("#scheduleNotice","Ders programi ve gunluk akis kaydedildi.","ok");await loadDashboard()}catch(e){note("#scheduleNotice",e.message,"error")}});
+$("#importScheduleBtn").addEventListener("click",async()=>{try{await importStructuredData("schedule","#scheduleImportFile","#scheduleNotice","Program dosyadan ice aktarildi ve RAG tazelendi.")}catch(e){note("#scheduleNotice",e.message,"error")}});
 $("#saveAnnouncementBtn").addEventListener("click",async()=>{try{const form=new FormData();form.append("title",$("#announcementTitle").value);form.append("content",$("#announcementContent").value);form.append("priority",$("#announcementPriority").value);const file=$("#announcementPdf").files[0];if(file)form.append("pdf_file",file);await adminFetch("/upload-announcement",{method:"POST",body:form});note("#announcementNotice","Duyuru yayina alindi.","ok");$("#announcementTitle").value="";$("#announcementContent").value="";$("#announcementPdf").value="";await loadDashboard()}catch(e){note("#announcementNotice",e.message,"error")}});
 ["#financeTotal","#financePaid"].forEach(id=>$(id).addEventListener("input",()=>{$("#financeRemaining").value=Math.max(Number($("#financeTotal").value||0)-Number($("#financePaid").value||0),0)}));
 $("#familyTableBody").addEventListener("click",async(e)=>{const btn=e.target.closest('button[data-action="delete-family"]');if(!btn)return;try{const row=btn.closest("tr");const parentId=row.dataset.parentId;const studentId=row.dataset.studentId;const result=await adminFetch("/family",{method:"DELETE",body:JSON.stringify({parent_id:parentId,student_id:studentId})});syncDashboard(result.dashboard);note("#familyNotice","Veli ve ogrenci kaydi silindi.","ok")}catch(err){note("#familyNotice",err.message,"error")}});

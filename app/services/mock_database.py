@@ -20,13 +20,13 @@ UPLOAD_DIR = Path(__file__).resolve().parents[2] / "static" / "uploads"
 WEEKDAYS = ["Pazartesi", "Sali", "Carsamba", "Persembe", "Cuma"]
 DEFAULT_PARENT = {
     "veli_id": "veli-1",
-    "ad_soyad": "Meral Koç",
+    "ad_soyad": "Meral KoÃ§",
     "telefon": "05051234567",
     "sifre": "1234",
 }
 DEFAULT_STUDENT = {
     "ogrenci_id": "ogrenci-1",
-    "ad_soyad": "e-kreş öğrenci deneme",
+    "ad_soyad": "e-kreÅŸ Ã¶ÄŸrenci deneme",
     "veli_id": "veli-1",
 }
 
@@ -50,6 +50,27 @@ class LocalJSONDatabase:
         state = self.get_state()
         return next((parent for parent in state["parents"] if parent["telefon"] == phone), None)
 
+    def get_students_by_parent_id(self, parent_id: str | None) -> list[dict[str, Any]]:
+        if not parent_id:
+            return []
+        state = self.get_state()
+        return [student for student in state["students"] if student["veli_id"] == parent_id]
+
+    def find_student_names_in_message(self, message: str) -> list[dict[str, str]]:
+        normalized_message = (message or "").casefold()
+        matches: list[dict[str, str]] = []
+        for student in self.get_state()["students"]:
+            student_name = (student.get("ad_soyad") or "").strip()
+            if student_name and student_name.casefold() in normalized_message:
+                matches.append(
+                    {
+                        "student_id": student["ogrenci_id"],
+                        "student_name": student_name,
+                        "parent_id": student["veli_id"],
+                    }
+                )
+        return matches
+
     def get_auth_failure_reason(self, phone: str | None) -> str:
         if not phone:
             return "Lutfen once telefon numaranizi girin."
@@ -64,18 +85,24 @@ class LocalJSONDatabase:
         parent = self.get_parent_by_phone(phone)
         if not parent:
             return None
-        state = self.get_state()
-        student = next((item for item in state["students"] if item["veli_id"] == parent["veli_id"]), None)
-        if not student:
+        students = self.get_students_by_parent_id(parent["veli_id"])
+        if not students:
             return None
         parent_first_name = (parent["ad_soyad"] or "Velimiz").split()[0]
+        student = students[0]
+        greeting = f"Hos geldiniz {parent_first_name} Hanim, {student['ad_soyad']} hakkinda size nasil yardimci olabilirim?"
+        if len(students) > 1:
+            greeting = f"Hos geldiniz {parent_first_name} Hanim, cocuklariniz hakkinda size nasil yardimci olabilirim?"
         return {
             "parent_id": parent["veli_id"],
             "parent_name": parent["ad_soyad"],
             "phone": parent["telefon"],
             "student_id": student["ogrenci_id"],
             "student_name": student["ad_soyad"],
-            "greeting": f"Hos geldiniz {parent_first_name} Hanim, {student['ad_soyad']} hakkinda size nasil yardimci olabilirim?",
+            "student_ids": [item["ogrenci_id"] for item in students],
+            "student_names": [item["ad_soyad"] for item in students],
+            "children_count": len(students),
+            "greeting": greeting,
         }
 
     def delete_family(self, parent_id: str, student_id: str) -> dict[str, Any]:
@@ -226,8 +253,8 @@ class LocalJSONDatabase:
                 return menu
         return menus[selected_date.weekday() % len(menus)]
 
-    def get_report_for_date(self, target_date: date | None = None, parent_id: str | None = None) -> DailyReport:
-        profile = self._profile_by_parent_id(parent_id)
+    def get_report_for_date(self, target_date: date | None = None, parent_id: str | None = None, student_id: str | None = None) -> DailyReport:
+        profile = self._profile_by_parent_id(parent_id, student_id)
         reports = [DailyReport.model_validate(item) for item in self.get_state()["reports"]]
         selected_date = target_date or date.today()
         for report in reports:
@@ -339,10 +366,10 @@ class LocalJSONDatabase:
         student = next((item for item in state["students"] if item["veli_id"] == parent_id), None)
         return student["ogrenci_id"] if student else None
 
-    def _profile_by_parent_id(self, parent_id: str | None) -> dict[str, str]:
+    def _profile_by_parent_id(self, parent_id: str | None, student_id: str | None = None) -> dict[str, str]:
         state = self.get_state()
-        student_id = self._student_id_by_parent_id(state, parent_id) or DEFAULT_STUDENT["ogrenci_id"]
-        student = self._get_student_by_id(state, student_id) or DEFAULT_STUDENT
+        resolved_student_id = student_id or self._student_id_by_parent_id(state, parent_id) or DEFAULT_STUDENT["ogrenci_id"]
+        student = self._get_student_by_id(state, resolved_student_id) or DEFAULT_STUDENT
         return {"student_name": student["ad_soyad"]}
 
     def _default_finance_summary(self, student_name: str) -> PaymentSummary:
@@ -498,7 +525,7 @@ class MockDatabaseTool(BaseTool):
 
         if intent == "finance_query" or any(token in q for token in ["odeme", "borc", "tutar", "aidat"]):
             summary = db.get_finance_summary(parent_id=parent_id)
-            return {"type": "payment_summary", "data": summary.model_dump(mode="json"), "message": f"Odeme Ozeti - {summary.ogrenci_adi} ({summary.donem})\nToplam Tutar: {summary.toplam_tutar:,.2f} TL\nOdenen: {summary.odenen:,.2f} TL\nKalan Borc: {summary.kalan:,.2f} TL"}
+            return {"type": "payment_summary", "data": summary.model_dump(mode="json"), "message": f"Odeme Ozeti - {summary.ogrenci_adi} ({summary.donem})\nToplam Tutar: {summary.toplam_tutar:,.2f} ₺\nOdenen: {summary.odenen:,.2f} ₺\nKalan Borc: {summary.kalan:,.2f} ₺"}
 
         if intent == "schedule_query" or any(token in q for token in ["ders", "program", "etkinlik"]):
             schedule = db.get_schedule_for_date()
@@ -506,5 +533,6 @@ class MockDatabaseTool(BaseTool):
 
         announcements = db.get_announcements()
         return {"type": "announcements", "data": {"announcements": announcements}, "message": "\n\n".join([f"{item['title']} ({item['date']}): {item['content']}" for item in announcements[:3]])}
+
 
 

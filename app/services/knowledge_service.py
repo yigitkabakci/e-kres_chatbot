@@ -25,11 +25,11 @@ class KnowledgeService:
             "page": 5,
         }
 
-    def query_report(self, target_date: date | None = None, parent_id: str | None = None) -> dict[str, Any]:
-        report = self._db.get_report_for_date(target_date=target_date, parent_id=parent_id)
+    def query_report(self, target_date: date | None = None, parent_id: str | None = None, student_id: str | None = None) -> dict[str, Any]:
+        report = self._db.get_report_for_date(target_date=target_date, parent_id=parent_id, student_id=student_id)
         schedule = self._db.get_schedule_for_date(target_date)
-        finance = self._db.get_finance_summary(parent_id=parent_id)
-        overdue = self._db.get_overdue_payments(student_id=self._db._student_id_by_parent_id(self._db.get_state(), parent_id))
+        finance = self._db.get_finance_summary(parent_id=parent_id, student_id=student_id)
+        overdue = self._db.get_overdue_payments(student_id=student_id or self._db._student_id_by_parent_id(self._db.get_state(), parent_id))
         return {
             "type": "gun_sonu_raporu",
             "data": {
@@ -43,8 +43,8 @@ class KnowledgeService:
             "page": 8,
         }
 
-    def query_payments(self, parent_id: str | None = None) -> dict[str, Any]:
-        summary = self._db.get_finance_summary(parent_id=parent_id)
+    def query_payments(self, parent_id: str | None = None, student_id: str | None = None) -> dict[str, Any]:
+        summary = self._db.get_finance_summary(parent_id=parent_id, student_id=student_id)
         return {
             "type": "odeme_ozeti",
             "data": summary.model_dump(mode="json"),
@@ -80,13 +80,13 @@ class KnowledgeService:
     def _format_report(report: DailyReport, schedule: DailySchedule, finance: PaymentSummary, overdue: list[PaymentItem]) -> str:
         schedule_lines = "\n".join([f"- {item.saat}: {item.etkinlik}" for item in schedule.dersler[:4]])
         finance_lines = (
-            f"Toplam borc: {finance.toplam_tutar:,.0f} TL\n"
-            f"Odenen: {finance.odenen:,.0f} TL\n"
-            f"Kalan: {finance.kalan:,.0f} TL"
+            f"Toplam borc: {finance.toplam_tutar:,.0f} ₺\n"
+            f"Odenen: {finance.odenen:,.0f} ₺\n"
+            f"Kalan: {finance.kalan:,.0f} ₺"
         )
         overdue_note = "- Gecikmis odeme bulunmuyor."
         if overdue:
-            overdue_note = "\n".join([f"- {item.tarih.strftime('%d.%m.%Y')} | {item.tutar:,.0f} TL | {item.durum}" for item in overdue[:2]])
+            overdue_note = "\n".join([f"- {item.tarih.strftime('%d.%m.%Y')} | {item.tutar:,.0f} ₺ | {item.durum}" for item in overdue[:2]])
         return (
             f"Merhaba! {report.ogrenci_adi} icin bugunun ({report.tarih}) ozeti:\n\n"
             f"Genel durum:\n"
@@ -104,13 +104,13 @@ class KnowledgeService:
     def _format_payments(summary: PaymentSummary) -> str:
         message = (
             f"Merhaba! {summary.ogrenci_adi} icin {summary.donem} donemi odeme durumu:\n\n"
-            f"Toplam borc: {summary.toplam_tutar:,.0f} TL\n"
-            f"Odenen: {summary.odenen:,.0f} TL\n"
-            f"Kalan: {summary.kalan:,.0f} TL"
+            f"Toplam borc: {summary.toplam_tutar:,.0f} ₺\n"
+            f"Odenen: {summary.odenen:,.0f} ₺\n"
+            f"Kalan: {summary.kalan:,.0f} ₺"
         )
         waiting_items = [item for item in summary.odemeler if item.durum != "Odendi"]
         if waiting_items:
-            lines = [f"- {item.tarih.strftime('%d.%m.%Y')} | {item.tutar:,.0f} TL | {item.tur} | {item.durum}" for item in waiting_items[:3]]
+            lines = [f"- {item.tarih.strftime('%d.%m.%Y')} | {item.tutar:,.0f} ₺ | {item.tur} | {item.durum}" for item in waiting_items[:3]]
             message += "\n\nBekleyen odemeler:\n" + "\n".join(lines)
         return message
 
@@ -118,4 +118,5 @@ class KnowledgeService:
     def _format_schedule(schedule: DailySchedule) -> str:
         lessons = "\n".join([f"- {item.saat}: {item.etkinlik}" for item in schedule.dersler])
         return f"Merhaba! Bugun ({schedule.gun}) ders programi:\n\n{lessons}"
+
 

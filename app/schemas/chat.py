@@ -79,6 +79,7 @@ class ChatRequest(BaseModel):
     attachments: list[Attachment] | None = None
     parent_phone: str | None = Field(default=None, max_length=32)
     password: str | None = Field(default=None, max_length=128)
+    active_student_id: str | None = Field(default=None, max_length=128)
 
 
 class ChatResponse(BaseModel):

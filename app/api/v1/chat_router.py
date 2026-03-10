@@ -23,6 +23,7 @@ _chat_service: ChatService | None = None
 
 class ParentAuthRequest(BaseModel):
     phone: str
+    session_id: str | None = None
 
 
 class ParentAuthResponse(BaseModel):
@@ -31,6 +32,9 @@ class ParentAuthResponse(BaseModel):
     phone: str
     student_id: str
     student_name: str
+    student_ids: list[str] = []
+    student_names: list[str] = []
+    children_count: int = 1
     greeting: str
 
 
@@ -78,6 +82,7 @@ async def chat(
             attachments=attachments,
             parent_phone=request.parent_phone,
             password=request.password,
+            active_student_id=request.active_student_id,
         )
         http_request.state.intent = result.get("intent")
         return ChatResponse(
@@ -95,13 +100,19 @@ async def chat(
 
 
 @router.post("/parent-auth", response_model=ParentAuthResponse, summary="Veli girisini dogrula")
-async def parent_auth(request: ParentAuthRequest, _api_key: str | None = Depends(verify_api_key)) -> ParentAuthResponse:
+async def parent_auth(
+    request: ParentAuthRequest,
+    _api_key: str | None = Depends(verify_api_key),
+    service: ChatService = Depends(get_chat_service),
+) -> ParentAuthResponse:
     database = get_database()
     profile = database.authenticate_parent(request.phone)
     if not profile:
         reason = database.get_auth_failure_reason(request.phone)
         status_code = status.HTTP_404_NOT_FOUND if "kayitli veli bulunamadi" in reason.lower() else status.HTTP_401_UNAUTHORIZED
         raise HTTPException(status_code=status_code, detail=reason)
+    if request.session_id:
+        service.set_active_student(request.session_id, profile["student_id"])
     return ParentAuthResponse(**profile)
 
 
@@ -182,6 +193,12 @@ async def upload_url(request: UrlRequest, _api_key: str | None = Depends(verify_
         "characters": len(text),
         "message": f"Bu web sayfasini analiz ettim ({word_count} kelime). Artik icerigi hakkinda sorular sorabilirsin.",
     }
+
+
+@router.get("/announcements", summary="Yayindaki duyurulari getir")
+async def public_announcements() -> dict[str, list[dict]]:
+    announcements = get_database().get_announcements()
+    return {"announcements": announcements}
 
 
 health_router = APIRouter(tags=["Health"])
